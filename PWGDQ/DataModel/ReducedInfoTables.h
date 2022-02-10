@@ -294,6 +294,10 @@ DECLARE_SOA_COLUMN(Eta, eta, float);                  //!
 DECLARE_SOA_COLUMN(Phi, phi, float);                  //!
 DECLARE_SOA_COLUMN(Sign, sign, int);                  //!
 DECLARE_SOA_COLUMN(FilterMap, filterMap, uint32_t);   //!
+DECLARE_SOA_COLUMN(Tauz, tauz, float);                //!
+DECLARE_SOA_COLUMN(Lz, lz, float);                    //!
+DECLARE_SOA_COLUMN(Lxy, lxy, float);                  //!
+DECLARE_SOA_COLUMN(Rap, rap, float);                    //!
 DECLARE_SOA_DYNAMIC_COLUMN(Px, px,                    //!
                            [](float pt, float phi) -> float { return pt * std::cos(phi); });
 DECLARE_SOA_DYNAMIC_COLUMN(Py, py, //!
@@ -313,7 +317,18 @@ DECLARE_SOA_TABLE(Dileptons, "AOD", "RTDILEPTON", //!
                   reducedpair::Pz<reducedpair::Pt, reducedpair::Eta>,
                   reducedpair::P<reducedpair::Pt, reducedpair::Eta>);
 
+DECLARE_SOA_TABLE(DileptonsVtx, "AOD", "RTDILEPTONVTX", //!
+//                  reducedpair::ReducedEventId, reducedpair::Mass,
+//                  reducedpair::Pt, reducedpair::Eta, reducedpair::Phi, reducedpair::Sign,
+//                  reducedpair::FilterMap,
+                  reducedpair::Rap,
+                  reducedpair::Tauz,
+                  reducedpair::Lz,
+                  reducedpair::Lxy);
+
+
 using Dilepton = Dileptons::iterator;
+using DileptonVtx = DileptonsVtx::iterator;
 
 namespace v0bits
 {

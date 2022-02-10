@@ -574,6 +574,7 @@ struct AnalysisEventMixing {
 struct AnalysisSameEventPairing {
 
   Produces<aod::Dileptons> dileptonList;
+  Produces<aod::DileptonsVtx> dileptonVtxList;
   OutputObj<THashList> fOutputList{"output"};
   Configurable<string> fConfigTrackCuts{"cfgTrackCuts", "", "Comma separated list of barrel track cuts"};
   Configurable<string> fConfigMuonCuts{"cfgMuonCuts", "", "Comma separated list of muon cuts"};
@@ -693,6 +694,7 @@ struct AnalysisSameEventPairing {
     uint32_t twoTrackFilter = 0;
     uint32_t dileptonFilterMap = 0;
     dileptonList.reserve(1);
+    dileptonVtxList.reserve(1);
     for (auto& [t1, t2] : combinations(tracks1, tracks2)) {
       if constexpr (TPairType == VarManager::kJpsiToEE) {
         twoTrackFilter = uint32_t(t1.isBarrelSelected()) & uint32_t(t2.isBarrelSelected()) & fTwoTrackFilterMask;
@@ -716,6 +718,7 @@ struct AnalysisSameEventPairing {
       // TODO: provide the type of pair to the dilepton table (e.g. ee, mumu, emu...)
       dileptonFilterMap = twoTrackFilter;
       dileptonList(event, VarManager::fgValues[VarManager::kMass], VarManager::fgValues[VarManager::kPt], VarManager::fgValues[VarManager::kEta], VarManager::fgValues[VarManager::kPhi], t1.sign() + t2.sign(), dileptonFilterMap);
+      dileptonVtxList(VarManager::fgValues[VarManager::kRap], VarManager::fgValues[VarManager::kVertexingTauz],VarManager::fgValues[VarManager::kVertexingLz],VarManager::fgValues[VarManager::kVertexingLxy]);
 
       for (unsigned int icut = 0; icut < ncuts; icut++) {
         if (twoTrackFilter & (uint32_t(1) << icut)) {

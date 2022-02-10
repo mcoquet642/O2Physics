@@ -152,7 +152,7 @@ void o2::aod::dqhistograms::DefineHistograms(HistogramManager* hm, const char* h
     }
     if (subGroupStr.Contains("mc")) {
       hm->AddHistogram(histClass, "Pt_vs_PtMC", "pT vs MC pT", false, 50, 0.0, 10.0, VarManager::kPt, 50, 0.0, 10.0, VarManager::kMCPt);
-      hm->AddHistogram(histClass, "Eta_vs_EtaMC", "#eta vs MC #eta", false, 50, -1.0, 1.0, VarManager::kEta, 50, -1.0, 1.0, VarManager::kMCEta);
+      hm->AddHistogram(histClass, "Eta_vs_EtaMC", "#eta vs MC #eta", false, 250, -5.0, 5.0, VarManager::kEta, 250, -5.0, 5.0, VarManager::kMCEta);
       hm->AddHistogram(histClass, "Phi_vs_PhiMC", "#varphi vs MC #varphi", false, 50, 0.0, 6.3, VarManager::kPhi, 50, 0.0, 6.3, VarManager::kMCPhi);
     }
   }
@@ -208,6 +208,12 @@ void o2::aod::dqhistograms::DefineHistograms(HistogramManager* hm, const char* h
       hm->AddHistogram(histClass, "LxyzErr", "", false, 100, 0.0, 10.0, VarManager::kVertexingLxyzErr);
       hm->AddHistogram(histClass, "LzErr", "", false, 100, 0.0, 10.0, VarManager::kVertexingLzErr);
       hm->AddHistogram(histClass, "TauzErr", "", false, 100, 0.0, 10.0, VarManager::kVertexingTauzErr);
+      hm->AddHistogram(histClass, "Tauz_Pt", "", true, 120, 0.0, 30.0, VarManager::kPt, 100, -0.01, 0.01, VarManager::kVertexingTauz);
+      hm->AddHistogram(histClass, "Tauz_Rapidity", "", true, 200, 2.5, 4.0, VarManager::kRap, 100, -0.01, 0.01, VarManager::kVertexingTauz);
+      hm->AddHistogram(histClass, "Lz_Pt", "", true, 120, 0.0, 30.0, VarManager::kPt, 100, 0.0, 10.0, VarManager::kVertexingLz);
+      hm->AddHistogram(histClass, "Lz_Rapidity", "", true, 200, 2.5, 4.0, VarManager::kRap, 100, 0.0, 10.0, VarManager::kVertexingLz);
+      hm->AddHistogram(histClass, "Lxy_Pt", "", true, 120, 0.0, 30.0, VarManager::kPt, 0.0, 10.0, VarManager::kVertexingLxy);
+      hm->AddHistogram(histClass, "Lxy_Rapidity", "", true, 200, 2.5, 4.0, VarManager::kRap, 100, 0.0, 10.0, VarManager::kVertexingLxy);
       hm->AddHistogram(histClass, "VtxingProcCode", "", false, 10, 0.0, 10.0, VarManager::kVertexingProcCode);
       hm->AddHistogram(histClass, "VtxingChi2PCA", "", false, 100, 0.0, 10.0, VarManager::kVertexingChi2PCA);
     }
