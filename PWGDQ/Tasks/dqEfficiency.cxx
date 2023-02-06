@@ -486,7 +486,7 @@ struct AnalysisSameEventPairing {
   Produces<aod::DileptonsExtra> dileptonExtraList;
   Produces<aod::DimuonsAll> dimuonAllList;
   Service<o2::ccdb::BasicCCDBManager> ccdb;
-  float mMagField=0.0;
+  float mMagField = 0.0;
   OutputObj<THashList> fOutputList{"output"};
   Filter filterEventSelected = aod::dqanalysisflags::isEventSelected == 1;
   Filter filterBarrelTrackSelected = aod::dqanalysisflags::isBarrelSelected > 0;
