@@ -36,10 +36,10 @@ DECLARE_SOA_TABLE(TrackCompColls, "AOD", "TRACKCOMPCOLLS", //! Table with vector
 
 namespace fwdtrack_association
 {
-DECLARE_SOA_INDEX_COLUMN(Collision, collision);                      //! Collision index
-DECLARE_SOA_INDEX_COLUMN(FwdTrack, fwdtrack);                        //! Track index
-DECLARE_SOA_INDEX_COLUMN(MFTTrack, mfttrack);                        //! Track index
-DECLARE_SOA_ARRAY_INDEX_COLUMN(Collision, compatibleColl);           //! Array of collision indices
+DECLARE_SOA_INDEX_COLUMN(Collision, collision);            //! Collision index
+DECLARE_SOA_INDEX_COLUMN(FwdTrack, fwdtrack);              //! Track index
+DECLARE_SOA_INDEX_COLUMN(MFTTrack, mfttrack);              //! Track index
+DECLARE_SOA_ARRAY_INDEX_COLUMN(Collision, compatibleColl); //! Array of collision indices
 } // namespace fwdtrack_association
 
 DECLARE_SOA_TABLE(FwdTrackAssoc, "AOD", "FWDTRACKASSOC", //! Table for track-to-collision association for e.g. HF vertex finding - tracks can appear for several collisions
