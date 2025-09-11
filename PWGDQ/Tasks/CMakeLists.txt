@@ -64,6 +64,11 @@ o2physics_add_dpl_workflow(task-muon-mch-trk-eff
                     PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore
                     COMPONENT_NAME Analysis)
 
+o2physics_add_dpl_workflow(task-mft-trk-eff
+                    SOURCES taskMFTTrkEfficiency.cxx
+                    PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore O2::MFTBase O2::DataFormatsMFT O2::MFTTracking O2::ITSMFTSimulation O2::ITSMFTWorkflow
+                    COMPONENT_NAME Analysis
+
 o2physics_add_dpl_workflow(task-j-psi-hf
                     SOURCES taskJpsiHf.cxx
                     PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore O2Physics::PWGDQCore
