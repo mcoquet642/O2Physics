@@ -116,7 +116,7 @@ o2physics_add_dpl_workflow(task-fwd-track-pid
 
 o2physics_add_dpl_workflow(quarkonia-to-hyperons
                     SOURCES quarkoniaToHyperons.cxx
-                    PUBLIC_LINK_LIBRARIES O2::DetectorsBase O2::Framework O2::DCAFitter KFParticle::KFParticle O2Physics::AnalysisCore O2Physics::MLCore O2Physics::EventFilteringUtils
+                    PUBLIC_LINK_LIBRARIES O2Physics::AnalysisCore O2Physics::MLCore O2Physics::EventFilteringUtils
                     COMPONENT_NAME Analysis)
 
 o2physics_add_dpl_workflow(model-converter-mult-pv
@@ -144,7 +144,7 @@ o2physics_add_dpl_workflow(qa-matching
                     PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore O2Physics::PWGDQCore
                     COMPONENT_NAME Analysis)
 
-o2physics_add_dpl_workflow(muon-global-alignment
-                    SOURCES muonGlobalAlignment.cxx
-                    PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore O2Physics::PWGDQCore
+o2physics_add_dpl_workflow(mft-mch-matcher
+                    SOURCES mftMchMatcher.cxx
+                    PUBLIC_LINK_LIBRARIES O2::Framework O2Physics::AnalysisCore O2::DetectorsBase O2Physics::AnalysisCCDB O2Physics::PWGDQCore O2Physics::EventFilteringUtils
                     COMPONENT_NAME Analysis)
