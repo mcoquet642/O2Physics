@@ -228,7 +228,6 @@ struct mftMchMatcher {
   Configurable<float> fPtMFTLow{"cfgPtMFTLow", 0.1f, ""};
 
   ////   Variables for matching configuration
-  Configurable<float> fMatchingPlaneZ{"cfgMatchingPlaneZ", -77.5f, ""};
   Configurable<int> fMaxCandidates{"cfgMaxCandidates", 0, ""};
 
   Configurable<bool> fKeepBestMatch{"cfgKeepBestMatch", false, "Keep only the best match global muons in the skimming"};
@@ -268,7 +267,12 @@ struct mftMchMatcher {
     double thetaAbs = TMath::ATan(mchTrack.rAtAbsorberEnd() / 505.) * TMath::RadToDeg();
 
     // propagate muon track to vertex
-    auto mchTrackAtVertex = mMatching.FwdtoMCH(VarManager::FwdToTrackPar(mchTrack, mchTrack));
+    auto trackConv = VarManager::FwdToTrackPar(mchTrack, mchTrack);
+    o2::dataformats::GlobalFwdTrack track;
+    track.setParameters(trackConv.getParameters());
+    track.setZ(trackConv.getZ());
+    track.setCovariances(trackConv.getCovariances());
+    auto mchTrackAtVertex = mMatching.FwdtoMCH(track);
     o2::mch::TrackExtrap::extrapToVertex(mchTrackAtVertex, collision.posX(), collision.posY(), collision.posZ(), collision.covXX(), collision.covYY());
 
     // double pUncorr = mchTrack.p();
@@ -361,18 +365,14 @@ struct mftMchMatcher {
     if (mRunNumber == bc.runNumber())
       return;
 
-    mRunNumber = bc.runNumber();
-    std::map<std::string, std::string> metadata;
-    auto soreor = o2::ccdb::BasicCCDBManager::getRunDuration(fCCDBApi, mRunNumber);
-    auto ts = soreor.first;
-    fGrpMag = fCCDBApi.retrieveFromTFileAny<o2::parameters::GRPMagField>(grpmagPath, metadata, ts);
+    fGrpMag = ccdbManager->getForTimeStamp<o2::parameters::GRPMagField>(grpmagPath, bc.timestamp());
 
         if (fGrpMag != nullptr) {
           o2::base::Propagator::initFieldFromGRP(fGrpMag);
           VarManager::SetMagneticField(fGrpMag->getNominalL3Field());
           VarManager::SetupMuonMagField();
         }
-
+    mRunNumber = bc.runNumber();
   }
 
   void init(o2::framework::InitContext&)
@@ -419,9 +419,14 @@ struct mftMchMatcher {
                  MyMFTCovariances const& mftCovs,
                  aod::McParticles const& /*mcParticles*/)
   {
-    auto bc = bcs.begin();
-    initCCDB(bc);
-    VarManager::SetMatchingPlane(fzMatching.value);
+    if (bcs.size() > 0) {
+      auto bc = bcs.begin();
+      initCCDB(bc);
+      VarManager::SetMatchingPlane(fzMatching.value);
+    }
+    if (fKeepBestMatch) {
+	    skimBestMuonMatches(muonTracks);
+    }
 
     mftCovIndexes.clear();
     for (auto& mftTrackCov : mftCovs) {
@@ -432,7 +437,7 @@ struct mftMchMatcher {
 
     for (auto muon : muonTracks) {
       // only consider global MFT-MCH-MID matches
-      if (static_cast<int>(muon.trackType()) >= 2) {
+      if (static_cast<int>(muon.trackType()) != 0) {
         continue;
       }
 
@@ -457,7 +462,7 @@ struct mftMchMatcher {
       auto mftTime = mfttrack.trackTime() + bc_coll.globalBC()*o2::constants::lhc::LHCBunchSpacingNS;
 
       o2::track::TrackParCovFwd mftprop = VarManager::FwdToTrackPar(mfttrack, mfttrackcov);
-      o2::dataformats::GlobalFwdTrack muonprop = VarManager::FwdToTrackPar(muontrack, muontrack);
+      o2::track::TrackParCovFwd muonprop = VarManager::FwdToTrackPar(muontrack, muontrack);
       if (fzMatching.value < 0.) {
         mftprop = VarManager::PropagateFwd(mfttrack, mfttrackcov, fzMatching.value);
         muonprop = VarManager::PropagateMuon(muontrack, collision, VarManager::kToMatching);
