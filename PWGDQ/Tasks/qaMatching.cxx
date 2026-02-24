@@ -255,6 +255,9 @@ struct qaMatching {
     std::vector<int64_t> taggedMuons;
   };
 
+  struct NoCovTag {};
+  struct WithCovTag {};
+
   using CollisionInfos = std::map<int64_t, CollisionInfo>;
 
   std::unordered_map<int64_t, int32_t> mftTrackCovs;
@@ -2561,12 +2564,13 @@ struct qaMatching {
     }
   }
 
-  template <class C, class TMUON, class TMFT, class CMFT>
-  void ProcessCollisionMC(const CollisionInfo& collisionInfo,
+  template <class CovTag, class C, class TMUON, class TMFT, class CMFT = void>
+  void ProcessCollisionMC(CovTag,
+		          const CollisionInfo& collisionInfo,
                           C const& collisions,
                           TMUON const& muonTracks,
                           TMFT const& mftTracks,
-                          CMFT const& mftCovs)
+                          CMFT const* mftCovs = nullptr)
   {
     auto collision = collisions.rawIteratorAt(collisionInfo.index);
 
@@ -2575,25 +2579,27 @@ struct qaMatching {
 
     // Chi2-based matching analysis
     FillMatchingPlotsMC(collision, collisionInfo, muonTracks, mftTracks, collisionInfo.matchingCandidates, collisionInfo.matchingCandidates, collisionInfo.matchablePairs, fMatchingChi2ScoreMftMchLow, fChi2MatchingPlotter.get(), false);
-    for (auto& [label, func] : matchingChi2Functions) {
-      MatchingCandidates matchingCandidates;
-      RunChi2Matching(collisions, muonTracks, mftTracks, mftCovs, label, collisionInfo.matchablePairs, collisionInfo.matchingCandidates, matchingCandidates);
+    if constexpr (std::is_same_v<CovTag, WithCovTag>) {
+	    for (auto& [label, func] : matchingChi2Functions) {
+		    MatchingCandidates matchingCandidates;
+		    RunChi2Matching(collisions, muonTracks, mftTracks, *mftCovs, label, collisionInfo.matchablePairs, collisionInfo.matchingCandidates, matchingCandidates);
 
-      auto* plotter = fMatchingPlotters.at(label).get();
-      double matchingScoreCut = matchingScoreCuts.at(label);
+		    auto* plotter = fMatchingPlotters.at(label).get();
+		    double matchingScoreCut = matchingScoreCuts.at(label);
 
-      FillMatchingPlotsMC(collision, collisionInfo, muonTracks, mftTracks, matchingCandidates, collisionInfo.matchingCandidates, collisionInfo.matchablePairs, matchingScoreCut, plotter, false);
-    }
+		    FillMatchingPlotsMC(collision, collisionInfo, muonTracks, mftTracks, matchingCandidates, collisionInfo.matchingCandidates, collisionInfo.matchablePairs, matchingScoreCut, plotter, false);
+	    }
 
-    // ML-based matching analysis
-    for (auto& [label, mlResponse] : matchingMlResponses) {
-      MatchingCandidates matchingCandidates;
-      RunMLMatching(collisions, muonTracks, mftTracks, mftCovs, label, collisionInfo.matchablePairs, collisionInfo.matchingCandidates, matchingCandidates);
+	    // ML-based matching analysis
+	    for (auto& [label, mlResponse] : matchingMlResponses) {
+		    MatchingCandidates matchingCandidates;
+		    RunMLMatching(collisions, muonTracks, mftTracks, *mftCovs, label, collisionInfo.matchablePairs, collisionInfo.matchingCandidates, matchingCandidates);
 
-      auto* plotter = fMatchingPlotters.at(label).get();
-      double matchingScoreCut = matchingScoreCuts.at(label);
+	            auto* plotter = fMatchingPlotters.at(label).get();
+		    double matchingScoreCut = matchingScoreCuts.at(label);
 
-      FillMatchingPlotsMC(collision, collisionInfo, muonTracks, mftTracks, matchingCandidates, collisionInfo.matchingCandidates, collisionInfo.matchablePairs, matchingScoreCut, plotter);
+		    FillMatchingPlotsMC(collision, collisionInfo, muonTracks, mftTracks, matchingCandidates, collisionInfo.matchingCandidates, collisionInfo.matchablePairs, matchingScoreCut, plotter);
+	    }
     }
 
     // Muons tagging
@@ -2603,18 +2609,25 @@ struct qaMatching {
         continue;
       auto collision = collisions.rawIteratorAt(mchTrack.collisionId());
 
-      auto const& mftTrack = mftTracks.rawIteratorAt(mftIndex);
-      if (mftTrackCovs.count(mftTrack.globalIndex()) < 1) {
-        continue;
-      }
-      auto const& mftTrackCov = mftCovs.rawIteratorAt(mftTrackCovs[mftTrack.globalIndex()]);
-
       auto mchTrackAtVertex = VarManager::PropagateMuon(mchTrack, collision, VarManager::kToVertex);
 
       // extrapolate to the matching plane
       auto z = o2::mft::constants::mft::LayerZCoordinate()[9];
       auto mchTrackProp = PropagateToZMCH(mchTrackAtVertex, z);
-      auto mftTrackProp = PropagateToZMFT(FwdToTrackPar(mftTrack, mftTrackCov), z);
+
+      auto const& mftTrack = mftTracks.rawIteratorAt(mftIndex);
+      o2::track::TrackParCovFwd mftTrackBeforeProp;
+      if constexpr (std::is_same_v<CovTag, WithCovTag>) {
+	      if (mftTrackCovs.count(mftTrack.globalIndex()) < 1) {
+		      continue;
+	      }
+	      auto const& mftTrackCov = mftCovs->rawIteratorAt(mftTrackCovs[mftTrack.globalIndex()]);
+	      mftTrackBeforeProp = FwdToTrackPar(mftTrack, mftTrackCov);
+      } else {
+	      mftTrackBeforeProp = FwdToTrackPar(mftTrack);
+      }
+
+      auto mftTrackProp = PropagateToZMFT(mftTrackBeforeProp, z);
 
       registry.get<TH2>(HIST("matching/MC/pairedMCHTracksAtMFT"))->Fill(mchTrackProp.getX(), mchTrackProp.getY());
       registry.get<TH2>(HIST("matching/MC/pairedMFTTracksAtMFT"))->Fill(mftTrackProp.getX(), mftTrackProp.getY());
@@ -2668,11 +2681,34 @@ struct qaMatching {
     }
 
     for (auto const& [collisionIndex, collisionInfo] : fCollisionInfos) {
-      ProcessCollisionMC(collisionInfo, collisions, muonTracks, mftTracks, mftCovs);
+      ProcessCollisionMC(WithCovTag{}, collisionInfo, collisions, muonTracks, mftTracks, &mftCovs);
     }
   }
 
   PROCESS_SWITCH(qaMatching, processQAMC, "processQAMC", true);
+
+  void processQAMCNoCov(MyEvents const& collisions,
+                   aod::BCsWithTimestamps const& bcs,
+                   MyMuonsMC const& muonTracks,
+                   MyMFTsMC const& mftTracks,
+                   aod::McParticles const& /*mcParticles*/)
+  {
+    auto bc = bcs.begin();
+    initCCDB(bc);
+
+    for (auto& muon : muonTracks) {
+      registry.get<TH1>(HIST("nTracksPerType"))->Fill(static_cast<int>(muon.trackType()));
+    }
+
+    FillCollisions(collisions, bcs, muonTracks, mftTracks, fCollisionInfos);
+
+    for (auto const& [collisionIndex, collisionInfo] : fCollisionInfos) {
+      ProcessCollisionMC(NoCovTag{}, collisionInfo, collisions, muonTracks, mftTracks);
+    }
+  }
+
+  PROCESS_SWITCH(qaMatching, processQAMCNoCov, "processQAMCNoCov", true);
+
 };
 
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
