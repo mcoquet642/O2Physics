@@ -77,7 +77,7 @@ using FullFwdTrackRealign = FullFwdTracksRealign::iterator;
 namespace fwdtrackrealignambiguous
 {
 DECLARE_SOA_INDEX_COLUMN_FULL(FwdTrackRealign, fwdTrackRealign, int, FwdTracksReAlign, ""); //! FwdTracksReAlign index
-DECLARE_SOA_SLICE_INDEX_COLUMN(BC, bc);											    
+DECLARE_SOA_SLICE_INDEX_COLUMN(BC, bc);
 
 } // namespace fwdtrackrealignambiguous
 
